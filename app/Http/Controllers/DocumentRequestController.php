@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Ticket;
 use App\Models\DocumentRequest;
+use App\Notifications\DocumentRequestedNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -13,11 +14,13 @@ class DocumentRequestController extends Controller
     {
         $this->authorize('request', $ticket);
 
-        DocumentRequest::create([
+        $docRequest = DocumentRequest::create([
             'ticket_id' => $ticket->id,
             'requested_by_id' => Auth::user()->id,
             'document_type' => $request->document_type,
         ]);
+
+        $ticket->user->notify(new DocumentRequestedNotification($docRequest));
 
         return redirect()->route('tickets.show', $ticket);
     }

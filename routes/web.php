@@ -6,6 +6,7 @@ use Laravel\Fortify\Features;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\DocumentRequestController;
+use App\Http\Controllers\NotificationController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -31,6 +32,9 @@ Route::middleware('auth')->group(function () {
 
     Route::get('agent/tickets', [TicketController::class, 'agentIndex'])->name('agent.tickets');
     Route::post('tickets/{ticket}/assign', [TicketController::class, 'assign'])->name('tickets.assign');
+
+    Route::post('notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::post('notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
 
 });
 

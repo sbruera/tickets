@@ -5,10 +5,14 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Ticket;
 use App\Models\Document;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use App\Enums\TicketStatus;
 use App\Enums\TicketType;
 use App\Enums\TransportMode;
+use App\Enums\UserRole;
+use App\Notifications\TicketCreatedNotification;
+use App\Notifications\TicketStatusChangedNotification;
 use Inertia\Inertia;
 
 class TicketController extends Controller
@@ -82,6 +86,8 @@ class TicketController extends Controller
             }
         }
 
+        User::where('role', UserRole::AGENT)->each(fn($agent) => $agent->notify(new TicketCreatedNotification($ticket)));
+
         return redirect()->route('tickets.show', $ticket);
     }
 
@@ -91,6 +97,8 @@ class TicketController extends Controller
         return Inertia::render('tickets/Show', [
             'ticket' => $ticket->load(['documents', 'documentRequests']),
             'canRequestDocuments' => Auth::user()->isAgent(),
+            'canUpdateStatus' => Auth::user()->isAgent(),
+            'statuses' => collect(TicketStatus::cases())->map(fn($e) => ['name' => $e->name, 'value' => $e->value]),
         ]);
     }
 
@@ -108,6 +116,8 @@ class TicketController extends Controller
         $this->authorize('update', $ticket);
         $ticket->status = $request->status;
         $ticket->save();
+
+        $ticket->user->notify(new TicketStatusChangedNotification($ticket));
 
         return redirect()->route('tickets.show', $ticket);
     }

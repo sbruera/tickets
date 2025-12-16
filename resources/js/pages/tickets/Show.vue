@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 
 interface Document {
     id: number;
@@ -29,9 +29,16 @@ interface Ticket {
     document_requests: DocumentRequest[];
 }
 
+interface StatusOption {
+    name: string;
+    value: string;
+}
+
 const props = defineProps<{
     ticket: Ticket;
     canRequestDocuments: boolean;
+    canUpdateStatus: boolean;
+    statuses: StatusOption[];
 }>();
 
 const fileInput = ref<HTMLInputElement | null>(null);
@@ -41,6 +48,14 @@ const form = useForm({
 
 const requestForm = useForm({
     document_type: '',
+});
+
+const statusForm = useForm({
+    status: props.ticket.status,
+});
+
+watch(() => props.ticket.status, (newStatus) => {
+    statusForm.status = newStatus;
 });
 
 function destroy(id: number) {
@@ -87,6 +102,10 @@ function deleteDocumentRequest(id: number) {
 function fulfillRequest(id: number) {
     router.post(`/document-requests/${id}/fulfill`);
 }
+
+function updateStatus() {
+    statusForm.put(`/tickets/${props.ticket.id}`);
+}
 </script>
 
 <template>
@@ -109,7 +128,19 @@ function fulfillRequest(id: number) {
                 </div>
                 <div>
                     <dt class="text-gray-500 text-sm">Status</dt>
-                    <dd>{{ ticket.status }}</dd>
+                    <dd v-if="!canUpdateStatus">{{ ticket.status }}</dd>
+                    <form v-else @submit.prevent="updateStatus" class="flex gap-2 items-center">
+                        <select v-model="statusForm.status" class="border rounded p-1 dark:bg-gray-800">
+                            <option v-for="s in statuses" :key="s.value" :value="s.value">{{ s.name }}</option>
+                        </select>
+                        <button 
+                            type="submit" 
+                            :disabled="statusForm.processing || statusForm.status === ticket.status"
+                            class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 text-sm"
+                        >
+                            Update
+                        </button>
+                    </form>
                 </div>
                 <div>
                     <dt class="text-gray-500 text-sm">Type</dt>
