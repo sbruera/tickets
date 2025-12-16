@@ -4,7 +4,7 @@ namespace App\Enums;
 
 enum TransportMode: string
 {
-    case AI = 'ai';
+    case AIR = 'air';
     case LAND = 'land';
     case SEA = 'sea';
 }

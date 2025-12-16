@@ -17,10 +17,10 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->integer('type');
-            $table->enum('transport_mode', [TransportMode::class]);
+            $table->string('transport_mode');
             $table->string('product');
             $table->string('country');
-            $table->enum('status', [TicketStatus::class]);
+            $table->string('status');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('assigned_agent_id')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
