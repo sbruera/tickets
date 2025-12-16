@@ -45,7 +45,7 @@ class DocumentPolicy
      */
     public function delete(User $user, Document $document): bool
     {
-        return false;
+        return $user->isAgent() || $user->id === $document->uploaded_by_id;
     }
 
     /**

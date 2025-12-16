@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { ref } from 'vue';
+
+interface Document {
+    id: number;
+    type: string;
+    created_at: string;
+}
 
 interface Ticket {
     id: number;
@@ -11,16 +18,44 @@ interface Ticket {
     product: string;
     country: string;
     created_at: string;
+    documents: Document[];
 }
 
 defineProps<{
     ticket: Ticket;
 }>();
 
+const fileInput = ref<HTMLInputElement | null>(null);
+const form = useForm({
+    document: null as File | null,
+});
+
 function destroy(id: number) {
     if (confirm('Delete this ticket?')) {
         router.delete(`/tickets/${id}`);
     }
+}
+
+function deleteDocument(id: number) {
+    if (confirm('Delete this document?')) {
+        router.delete(`/documents/${id}`);
+    }
+}
+
+function uploadDocument(ticketId: number) {
+    if (!form.document) return;
+    form.post(`/tickets/${ticketId}/documents`, {
+        forceFormData: true,
+        onSuccess: () => {
+            form.reset();
+            if (fileInput.value) fileInput.value.value = '';
+        },
+    });
+}
+
+function onFileChange(e: Event) {
+    const target = e.target as HTMLInputElement;
+    form.document = target.files?.[0] || null;
 }
 </script>
 
@@ -68,8 +103,36 @@ function destroy(id: number) {
                 </div>
             </dl>
 
+            <div class="mt-8">
+                <h2 class="text-lg font-semibold mb-4">Documents</h2>
+                
+                <form @submit.prevent="uploadDocument(ticket.id)" class="flex gap-2 mb-4">
+                    <input 
+                        ref="fileInput"
+                        type="file" 
+                        @change="onFileChange"
+                        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
+                        class="flex-1 border rounded p-2 dark:bg-gray-800"
+                    />
+                    <button 
+                        type="submit" 
+                        :disabled="!form.document || form.processing"
+                        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                    >
+                        Upload
+                    </button>
+                </form>
+
+                <ul v-if="ticket.documents?.length" class="space-y-2">
+                    <li v-for="doc in ticket.documents" :key="doc.id" class="flex justify-between items-center p-2 border rounded">
+                        <a :href="`/documents/${doc.id}`" class="text-blue-600 hover:underline">{{ doc.type }}</a>
+                        <button @click="deleteDocument(doc.id)" class="text-red-600 text-sm hover:underline">Delete</button>
+                    </li>
+                </ul>
+                <p v-else class="text-gray-500">No documents uploaded.</p>
+            </div>
+
             <Link href="/tickets" class="inline-block mt-6 text-blue-600 hover:underline">← Back to tickets</Link>
         </div>
     </AppLayout>
 </template>
-

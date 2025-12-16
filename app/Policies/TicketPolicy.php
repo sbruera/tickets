@@ -63,4 +63,9 @@ class TicketPolicy
     {
         return false;
     }
+
+    public function upload(User $user, Ticket $ticket): bool
+    {
+        return $user->isAgent() || $user->id === $ticket->user_id;
+    }
 }

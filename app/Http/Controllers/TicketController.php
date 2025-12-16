@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Ticket;
+use App\Models\Document;
 use Illuminate\Support\Facades\Auth;
 use App\Enums\TicketStatus;
 use App\Enums\TicketType;
@@ -46,6 +47,18 @@ class TicketController extends Controller
             'user_id' => Auth::user()->id,
         ]);
 
+        if ($request->hasFile('documents')) {
+            foreach ($request->file('documents') as $file) {
+                $filePath = $file->store("tickets/{$ticket->id}", 'private');
+                Document::create([
+                    'ticket_id' => $ticket->id,
+                    'uploaded_by_id' => Auth::user()->id,
+                    'file_path' => $filePath,
+                    'type' => $file->getClientOriginalName(),
+                ]);
+            }
+        }
+
         return redirect()->route('tickets.show', $ticket);
     }
 
@@ -53,7 +66,7 @@ class TicketController extends Controller
     {
         $this->authorize('view', $ticket);
         return Inertia::render('tickets/Show', [
-            'ticket' => $ticket,
+            'ticket' => $ticket->load('documents'),
         ]);
     }
 

@@ -18,10 +18,16 @@ const form = useForm({
     transport_mode: '',
     product: '',
     country: '',
+    documents: [] as File[],
 });
 
+function onFilesChange(e: Event) {
+    const target = e.target as HTMLInputElement;
+    form.documents = target.files ? Array.from(target.files) : [];
+}
+
 function submit() {
-    form.post('/tickets');
+    form.post('/tickets', { forceFormData: true });
 }
 </script>
 
@@ -67,6 +73,17 @@ function submit() {
                         <option value="USA">USA</option>
                         <option value="Canada">Canada</option>
                     </select>
+                </div>
+
+                <div>
+                    <label class="block mb-1">Documents</label>
+                    <input 
+                        type="file" 
+                        multiple
+                        @change="onFilesChange"
+                        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
+                        class="w-full border rounded p-2 dark:bg-gray-800"
+                    />
                 </div>
 
                 <button type="submit" :disabled="form.processing" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50">
