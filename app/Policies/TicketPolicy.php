@@ -68,4 +68,9 @@ class TicketPolicy
     {
         return $user->isAgent() || $user->id === $ticket->user_id;
     }
+
+    public function request(User $user, Ticket $ticket): bool
+    {
+        return $user->isAgent();
+    }
 }

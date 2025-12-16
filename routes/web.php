@@ -27,6 +27,11 @@ Route::middleware('auth')->group(function () {
     Route::resource('tickets.document-requests', DocumentRequestController::class)
         ->shallow();
 
+    Route::post('document-requests/{document_request}/fulfill', [DocumentRequestController::class, 'fulfill'])->name('document-requests.fulfill');
+
+    Route::get('agent/tickets', [TicketController::class, 'agentIndex'])->name('agent.tickets');
+    Route::post('tickets/{ticket}/assign', [TicketController::class, 'assign'])->name('tickets.assign');
+
 });
 
 require __DIR__.'/settings.php';

@@ -13,22 +13,38 @@ import {
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid, Ticket } from 'lucide-vue-next';
+import { Link, usePage } from '@inertiajs/vue3';
+import { BookOpen, Folder, LayoutGrid, Ticket, Users } from 'lucide-vue-next';
+import { computed } from 'vue';
 import AppLogo from './AppLogo.vue';
 
-const mainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: dashboard(),
-        icon: LayoutGrid,
-    },
-    {
-        title: 'Tickets',
-        href: '/tickets',
-        icon: Ticket,
-    },
-];
+const page = usePage();
+const isAgent = computed(() => (page.props.auth as any)?.user?.role === 'agent');
+
+const mainNavItems = computed<NavItem[]>(() => {
+    const items: NavItem[] = [
+        {
+            title: 'Dashboard',
+            href: dashboard(),
+            icon: LayoutGrid,
+        },
+        {
+            title: 'Tickets',
+            href: '/tickets',
+            icon: Ticket,
+        },
+    ];
+    
+    if (isAgent.value) {
+        items.push({
+            title: 'All Tickets',
+            href: '/agent/tickets',
+            icon: Users,
+        });
+    }
+    
+    return items;
+});
 
 const footerNavItems: NavItem[] = [
     {

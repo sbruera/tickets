@@ -27,6 +27,29 @@ class TicketController extends Controller
         ]);
     }
 
+    public function agentIndex()
+    {
+        $user = Auth::user();
+        abort_unless($user->isAgent(), 403);
+
+        $tickets = Ticket::latest()->get();
+
+        return Inertia::render('tickets/AgentIndex', [
+            'tickets' => $tickets,
+        ]);
+    }
+
+    public function assign(Ticket $ticket)
+    {
+        $user = Auth::user();
+        abort_unless($user->isAgent(), 403);
+
+        $ticket->assigned_agent_id = $user->id;
+        $ticket->save();
+
+        return redirect()->back();
+    }
+
     public function create()
     {
         return Inertia::render('tickets/Create', [
@@ -66,7 +89,8 @@ class TicketController extends Controller
     {
         $this->authorize('view', $ticket);
         return Inertia::render('tickets/Show', [
-            'ticket' => $ticket->load('documents'),
+            'ticket' => $ticket->load(['documents', 'documentRequests']),
+            'canRequestDocuments' => Auth::user()->isAgent(),
         ]);
     }
 
